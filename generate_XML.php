@@ -14,16 +14,19 @@
 		    }
 		}
 
-	    $result = wc_get_products(array('status' => array('publish'), 'limit' => -1));
+	    $result = wc_get_products(
+	    	array(
+	    		'status' => array('publish'),
+	    		'limit' => -1
+	    	)
+	    );
 
 	    foreach ($result as $index => $prod) {
 	        $product_id = $prod->get_id();
 	        $attributes = $prod->get_attributes();
 	        $stockstatus = $prod->get_stock_status();
 
-	        if ((strcmp($stockstatus, "outofstock") == 0) && ($ifoutofstock == 1)) {
-	            continue;
-	        }
+	        if (strcmp($stockstatus, "outofstock") == 0 && $ifoutofstock == 1) continue;
 
 	        $price = $prod->get_price();
 	        $xml_rows[$product_id]['price_raw'] = $price;
@@ -34,8 +37,8 @@
 
 	        $xml_rows[$product_id]['price'] = addslashes($price);
 	        $xml_rows[$product_id]['stock_quantity'] = intval($prod->get_stock_quantity());
-	        $image = get_the_post_thumbnail_url($product_id, 'shop_catalog');
-	        $xml_rows[$product_id]['image_url'] = $image;
+	        $main_image = get_the_post_thumbnail_url($product_id, 'shop_catalog');
+	        $xml_rows[$product_id]['image_url'] = $main_image;
 	        $xml_rows[$product_id]['images'] = array();
 	        $attachment_ids = $prod->get_gallery_image_ids();
 
@@ -62,16 +65,18 @@
 	        $xml_rows[$product_id]['categories'] = array();
 	        $category_path = '';
 
-	        for ($i = 0; $i < count($prod_category_tree); $i++) {
-	            if ($i == 0) {
-	                $xml_rows[$product_id]['category_id'] = $prod_category_tree[$i]->term_id;
-	            }
+	        if (count($prod_category_tree)) {
+	        	for ($i = 0; $i < count($prod_category_tree); $i++) {
+		            if ($i == 0) {
+		                $xml_rows[$product_id]['category_id'] = $prod_category_tree[$i]->term_id;
+		            }
 
-	            $category_path .= $prod_category_tree[$i]->name;
-	            $xml_rows[$product_id]['categories'][] = $prod_category_tree[$i]->name;
+		            $category_path .= $prod_category_tree[$i]->name;
+		            $xml_rows[$product_id]['categories'][] = $prod_category_tree[$i]->name;
 
-	            if ($i < count($prod_category_tree) - 1) $category_path .= ', ';
-	        }
+		            if ($i < count($prod_category_tree) - 1) $category_path .= ', ';
+		        }
+		    }
 
 	        $xml_rows[$product_id]['category_path'] = $category_path;
 	        $title = str_replace("'", " ", $prod->get_title());
@@ -79,9 +84,6 @@
 	        $title = strip_tags($title);
 	        $xml_rows[$product_id]['title'] = $title;
 	        $xml_rows[$product_id]['description'] = $prod->get_short_description();
-	        $xml_rows[$product_id]['manufacturer_code'] = get_post_meta($product_id, 'wppfm_product_gtin', true);
-	        $xml_rows[$product_id]['manufacturer'] = get_post_meta($product_id, 'wppfm_product_brand', true);
-	        $xml_rows[$product_id]['model'] = get_post_meta($product_id, 'wppfm_product_mpn', true);
 	        $xml_rows[$product_id]['product_url'] = get_permalink($product_id);
 	        $xml_rows[$product_id]['category_link'] = get_term_link($xml_rows[$product_id]['category_id'], 'product_cat');
 	    }
@@ -99,7 +101,6 @@
 			$xml .= '<product id="'.$product_id.'">
 				<title><![CDATA['.$product_info['title'].']]></title>
 				<item_price><![CDATA['.$product_info['price'].']]></item_price>
-				<manufacturer><![CDATA['.$product_info['manufacturer'].']]></manufacturer>
 				<image_url><![CDATA['.$product_info['image_url'].']]></image_url>
 				<product_url><![CDATA['.$product_info['product_url'].']]></product_url>
 				<categories>';
@@ -113,9 +114,7 @@
 			$xml .= '</categories>
 				<description><![CDATA['.$product_info['description'].']]></description>
 				<stock><![CDATA['.$product_info['stock_quantity'].']]></stock>
-				<ean_code><![CDATA['.$product_info['sku'].']]></ean_code>
-				<manufacturer_code><![CDATA['.$product_info['manufacturer_code'].']]></manufacturer_code>
-				<model><![CDATA['.$product_info['model'].']]></model>';
+				<ean_code><![CDATA['.$product_info['sku'].']]></ean_code>';
 
 			if (count($product_info['images'])) {
 				$xml .= '<additional_images>';
