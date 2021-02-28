@@ -104,8 +104,10 @@
 				<product_url><![CDATA['.$product_info['product_url'].']]></product_url>
 				<categories>';
 
-			foreach ($product_info['categories'] as $cat_key => $cat_name) {
-				$xml .= '<category><![CDATA['.$cat_name.']]></category>';
+			if (count($product_info['categories'])) {
+				foreach ($product_info['categories'] as $cat_key => $cat_name) {
+					$xml .= '<category><![CDATA['.$cat_name.']]></category>';
+				}
 			}
 
 			$xml .= '</categories>
@@ -138,13 +140,14 @@
 	$dom->formatOutput = true;
 	$dom->loadXML($xml);
 	$xml_output = $dom->saveXML();
+	$XML_file_name = 'Products';
 
 	ob_clean();
 	
 	header('Pragma: private');
 	header('Cache-control: private, must-revalidate');
 	header('Content-type: text/xml');
-	header('Content-Disposition: attachment; filename="Products.xml"');
+	header('Content-Disposition: attachment; filename="'.$XML_file_name.'.xml"');
 	
 	echo $xml_output;
 ?>
